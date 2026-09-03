@@ -48,6 +48,12 @@ python -m sentry weekly             scan + HTML report + notification
 In cmd.exe, `cd D:\...` from a C: prompt does not change drive — use `cd /d`.
 `Sentry.bat` and every script in `scripts\` handle this for you.
 
+The suite is `unittest`, and `run_tests.py` is the runner the counts above refer to:
+**556 tests, 549 passing, 7 skipped.** `pytest` also works and reports a larger number —
+**574 collected, 567 passing, 7 skipped, plus 1158 subtests** — because it counts the
+module-level checks in `test_windows_paths.py` individually where the unittest runner
+groups them. Both are green; they are two ways of counting the same suite.
+
 ## Install
 
 You need Python 3.10 or newer. Check with `python --version`.
