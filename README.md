@@ -38,9 +38,9 @@ your quarantine. See "Where things live" below.
 Double-click **`Sentry.bat`** and pick an option. Or from a terminal:
 
 ```
-cd /d D:\ClaudeCode\Sentry
+cd /d <the folder you cloned into>
 python -m pip install -r requirements.txt
-python tests\run_tests.py          verify the build (522 tests)
+python tests\run_tests.py          verify the build (556 tests)
 python -m sentry serve              dashboard at http://127.0.0.1:8787
 python -m sentry weekly             scan + HTML report + notification
 ```
@@ -53,7 +53,7 @@ In cmd.exe, `cd D:\...` from a C: prompt does not change drive — use `cd /d`.
 You need Python 3.10 or newer. Check with `python --version`.
 
 ```
-cd sentry
+cd <the folder you cloned into>
 pip install -r requirements.txt
 ```
 
@@ -284,7 +284,7 @@ python tests\selftest.py
 
 Builds a sandbox of harmless decoy files that reproduce structural traits
 (a PE header behind a `.txt` name, a double extension, obfuscation-shaped
-script text), runs the full pipeline, and asserts 30 behaviours including
+script text), runs the full pipeline, and asserts 29 behaviours including
 that quarantine is refused without a verdict and that restore is byte- and
 permission-exact.
 

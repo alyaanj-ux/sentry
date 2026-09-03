@@ -1,7 +1,39 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Build output
+dist/
+build/
+release/
+*.exe
+
+# Node
+node_modules/
+
+# Local data / config (Sentry writes these under %LOCALAPPDATA%\Sentry)
+sentry.db
+config.json
+*.quar
+*.quar.txt
+reports/
+quarantine/
+feeds/
+rules/
+
+# Editor / OS
 .claude/
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / env
 *.log
+.env
+.env.local

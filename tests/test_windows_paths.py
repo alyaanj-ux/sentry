@@ -40,17 +40,17 @@ FAILURES: list[str] = []
 CHECKS = 0
 
 WIN_ENV = {
-    "USERPROFILE": r"C:\Users\alyaan",
-    "APPDATA": r"C:\Users\alyaan\AppData\Roaming",
-    "LOCALAPPDATA": r"C:\Users\alyaan\AppData\Local",
+    "USERPROFILE": r"C:\Users\testuser",
+    "APPDATA": r"C:\Users\testuser\AppData\Roaming",
+    "LOCALAPPDATA": r"C:\Users\testuser\AppData\Local",
     "ProgramData": r"C:\ProgramData",
     "ALLUSERSPROFILE": r"C:\ProgramData",
     "WINDIR": r"C:\Windows",
     "SystemRoot": r"C:\Windows",
     "SystemDrive": "C:",
-    "TEMP": r"C:\Users\alyaan\AppData\Local\Temp",
-    "TMP": r"C:\Users\alyaan\AppData\Local\Temp",
-    "USERNAME": "alyaan",
+    "TEMP": r"C:\Users\testuser\AppData\Local\Temp",
+    "TMP": r"C:\Users\testuser\AppData\Local\Temp",
+    "USERNAME": "testuser",
     "USERDOMAIN": "DESKTOP-A1",
 }
 
@@ -126,14 +126,14 @@ def test_paths_and_env_expansion():
         for k, v in presets.items():
             print(f"        {k}: {v}")
         eq("high_risk uses backslashes throughout (ntpath join)",
-           presets["high_risk"][0], r"C:\Users\alyaan\Downloads")
+           presets["high_risk"][0], r"C:\Users\testuser\Downloads")
         check("no forward slashes in any Windows preset path",
               not any("/" in p for v in presets.values() for p in v),
               str(presets))
         eq("whole_drive is the drive root",
            presets["whole_drive"], ["C:\\"])
         eq("%TEMP% is resolved, not passed through literally",
-           presets["high_risk"][3], r"C:\Users\alyaan\AppData\Local\Temp")
+           presets["high_risk"][3], r"C:\Users\testuser\AppData\Local\Temp")
         check("persistence includes the all-users Startup folder",
               r"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"
               in presets["persistence"], str(presets["persistence"]))
@@ -147,7 +147,7 @@ def test_paths_and_env_expansion():
         check("has_unexpanded_var catches the literal",
               config.has_unexpanded_var("%NOPE%"))
         check("has_unexpanded_var ignores a real path",
-              not config.has_unexpanded_var(r"C:\Users\alyaan"))
+              not config.has_unexpanded_var(r"C:\Users\testuser"))
         eq("resolved_scan_paths drops an unexpanded literal",
            config.resolved_scan_paths(
                {"enabled_presets": [], "custom_paths": ["%NOPE%\\x"]}), [])
@@ -156,14 +156,14 @@ def test_paths_and_env_expansion():
         del os.environ["TMP"]
         eq("TEMP/TMP unset falls back to %LOCALAPPDATA%\\Temp",
            config.preset_paths()["high_risk"][3],
-           r"C:\Users\alyaan\AppData\Local\Temp")
+           r"C:\Users\testuser\AppData\Local\Temp")
 
         eq("_is_within: child of a drive root",
-           config._is_within(r"C:\Users\alyaan", "C:\\"), True)
+           config._is_within(r"C:\Users\testuser", "C:\\"), True)
         eq("_is_within: sibling with a shared name prefix is NOT within",
-           config._is_within(r"C:\Users\alyaanBackup", r"C:\Users\alyaan"), False)
+           config._is_within(r"C:\Users\testuserBackup", r"C:\Users\testuser"), False)
         eq("_is_within: case-insensitive",
-           config._is_within(r"c:\users\ALYAAN\x", r"C:\Users\alyaan"), True)
+           config._is_within(r"c:\users\ALYAAN\x", r"C:\Users\testuser"), True)
 
         # Exclusions must not be hardcoded to C:.
         exc = [os.path.expandvars(e) for e in config.DEFAULT_EXCLUSIONS_WIN]
@@ -180,7 +180,7 @@ def test_long_paths():
     from sentry import config
     print("\n[8] long-path (>260 char) handling")
     with windows():
-        deep = "C:\\Users\\alyaan\\" + "\\".join(["averyverylongdirname"] * 14) + "\\x.exe"
+        deep = "C:\\Users\\testuser\\" + "\\".join(["averyverylongdirname"] * 14) + "\\x.exe"
         check("test path really is over MAX_PATH", len(deep) > 260, len(deep))
         lp = config.long_path(deep)
         print(f"        len={len(deep)}  ->  {lp[:60]}...")
@@ -188,7 +188,7 @@ def test_long_paths():
         eq("round-trips back to the plain path",
            config.strip_long_prefix(lp), deep)
         eq("short paths are left alone",
-           config.long_path(r"C:\Users\alyaan\a.exe"), r"C:\Users\alyaan\a.exe")
+           config.long_path(r"C:\Users\testuser\a.exe"), r"C:\Users\testuser\a.exe")
         unc = "\\\\server\\share\\" + "\\".join(["longdirname"] * 25) + "\\x.exe"
         eq("UNC gets the \\\\?\\UNC\\ form",
            config.long_path(unc), "\\\\?\\UNC" + unc[1:])
@@ -223,7 +223,7 @@ def test_placeholders_and_reparse():
                                             real_open(os.devnull, *a, **k))[1]
         os.stat = lambda p, **k: ST(0x00400000)
         try:
-            r = engine.scan_file(r"C:\Users\alyaan\OneDrive\big.exe",
+            r = engine.scan_file(r"C:\Users\testuser\OneDrive\big.exe",
                                  known_bad={}, yara_rules=None,
                                  cfg={"max_file_mb": 128}, allow=set())
         finally:
@@ -242,7 +242,7 @@ def test_placeholders_and_reparse():
         os.lstat = lambda p, **k: LST()
         try:
             eq("a junction under %LOCALAPPDATA% is not descended into",
-               engine._is_reparse_dir(r"C:\Users\alyaan\AppData\Local",
+               engine._is_reparse_dir(r"C:\Users\testuser\AppData\Local",
                                       "Application Data"), True)
         finally:
             os.lstat = saved_lstat
@@ -253,7 +253,7 @@ def test_placeholders_and_reparse():
         os.lstat = lambda p, **k: LSTC()
         try:
             eq("a OneDrive cloud directory is still enumerated",
-               engine._is_reparse_dir(r"C:\Users\alyaan", "OneDrive"), False)
+               engine._is_reparse_dir(r"C:\Users\testuser", "OneDrive"), False)
         finally:
             os.lstat = saved_lstat
 
@@ -277,7 +277,7 @@ def test_icacls():
         os.chmod = lambda p, m: chmods.append((str(p), oct(m)))
         try:
             from pathlib import PurePath
-            target = PurePath(r"C:\Users\alyaan\AppData\Local\Sentry\quarantine\abc.quar")
+            target = PurePath(r"C:\Users\testuser\AppData\Local\Sentry\quarantine\abc.quar")
             notes = quarantine._harden(target)  # type: ignore[arg-type]
             harden_cmds = rec.cmdlines()
             rec.calls.clear()
@@ -307,9 +307,9 @@ def test_icacls():
               "or %USERNAME%",
               "*S-1-1-0:(X)" in joined, joined)
         eq("exact harden command lines", harden_cmds, [
-            r'icacls C:\Users\alyaan\AppData\Local\Sentry\quarantine\abc.quar '
+            r'icacls C:\Users\testuser\AppData\Local\Sentry\quarantine\abc.quar '
             r'/inheritance:d',
-            r'icacls C:\Users\alyaan\AppData\Local\Sentry\quarantine\abc.quar '
+            r'icacls C:\Users\testuser\AppData\Local\Sentry\quarantine\abc.quar '
             r'/deny *S-1-1-0:(X)',
         ])
         check("read-only attribute set as a FAT32/exFAT-proof second barrier",
@@ -449,17 +449,17 @@ def test_toast():
         # Clicking the toast must open the report. The first real Windows run
         # showed the toast appearing and the click doing nothing, because the
         # report path was dropped on the way into the script.
-        rep = r"C:\Users\alyaan\AppData\Local\Sentry\reports\scan 1.html"
+        rep = r"C:\Users\testuser\AppData\Local\Sentry\reports\scan 1.html"
         s3 = notify.build_toast_script("t", "m", rep)
         eq("a report path becomes a file:/// launch URI (spaces escaped)",
            notify.launch_uri(rep),
-           "file:///C:/Users/alyaan/AppData/Local/Sentry/reports/scan%201.html")
+           "file:///C:/Users/testuser/AppData/Local/Sentry/reports/scan%201.html")
         check("the toast itself is protocol-activated with that URI",
               "SetAttribute('activationType', 'protocol')" in s3
-              and "SetAttribute('launch', 'file:///C:/Users/alyaan/" in s3, s3)
+              and "SetAttribute('launch', 'file:///C:/Users/testuser/" in s3, s3)
         check("an explicit 'Open report' button carries the same URI",
               "SetAttribute('content', 'Open report')" in s3
-              and "SetAttribute('arguments', 'file:///C:/Users/alyaan/" in s3)
+              and "SetAttribute('arguments', 'file:///C:/Users/testuser/" in s3)
         check("no launch target is emitted when there is no report",
               "activationType" not in notify.build_toast_script("t", "m"))
         eq("a relative report path is never turned into a launch target",
@@ -481,7 +481,7 @@ def test_toast():
               and "SetAttribute('arguments', 'sentry-app:review')" in s5)
         check("the report is still reachable as a second button",
               "SetAttribute('content', 'Open report')" in s5
-              and "SetAttribute('arguments', 'file:///C:/Users/alyaan/" in s5)
+              and "SetAttribute('arguments', 'file:///C:/Users/testuser/" in s5)
         check("app link alone still activates the toast",
               "SetAttribute('launch', 'sentry-app:review')" in
               notify.build_toast_script("t", "m", app_link=notify.APP_PROTOCOL))
